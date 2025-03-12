@@ -94,5 +94,68 @@ export class GitService {
         });
     }
 
+    async getUserRepositories(token: string): Promise<string[]> {
+        try {
+            const response = await fetch('https://api.github.com/user/repos?per_page=100&sort=updated&direction=desc', {
+                headers: {
+                    Authorization: `token ${token}`,
+                    Accept: 'application/vnd.github.v3+json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            return data.map(repo => repo.full_name);
+        } catch (error) {
+            console.error('Error fetching repositories:', error);
+            throw new Error('Failed to fetch GitHub repositories');
+        }
+    }
+
+    async getGithubCommits(token: string, repoFullName: string): Promise<Commit[]> {
+        try {
+            const [owner, repo] = repoFullName.split('/');
+
+            if (!owner || !repo) {
+                throw new Error('Invalid repository format. Expected "owner/repo"');
+            }
+
+            const response = await fetch(
+                `https://api.github.com/repos/${owner}/${repo}/commits?per_page=100`,
+                {
+                    headers: {
+                        Authorization: `token ${token}`,
+                        Accept: 'application/vnd.github.v3+json'
+                    }
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
+            }
+
+            const data = await response.json();
+
+            const commits = data.map(item => {
+                const commit = new Commit();
+                commit.hash = item.sha;
+                commit.author = item.commit.author.name;
+                commit.date = new Date(item.commit.author.date);
+                commit.message = item.commit.message.split('\n')[0];
+                commit.summary = item.commit.message.split('\n').slice(1).join('\n').trim();
+                return commit;
+            });
+
+            // Save commits to database
+            return this.commitRepository.save(commits);
+        } catch (error) {
+            console.error('Error fetching GitHub commits:', error);
+            throw new Error(`Failed to fetch commits from GitHub: ${error.message}`);
+        }
+    }
+
     // TODO: Add LLM summary generation (e.g., via Claude API or MCP prompt)
 }

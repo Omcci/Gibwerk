@@ -69,10 +69,10 @@ export const authOptions: NextAuthOptions = {
                 profile,
                 timestamp: new Date().toISOString()
             });
-            if (account) {
+            if (account?.access_token) {
                 token.accessToken = account.access_token;
             }
-            return { ...token, ...user };
+            return token;
         },
         async session({ session, token, user }) {
             console.log('Session Callback:', {
@@ -81,8 +81,10 @@ export const authOptions: NextAuthOptions = {
                 user,
                 timestamp: new Date().toISOString()
             });
-            session.user = token as any;
-            return session;
+            return {
+                ...session,
+                token: token
+            };
         },
     },
 }; 

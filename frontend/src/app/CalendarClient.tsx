@@ -14,40 +14,77 @@ export default function CalendarClient() {
     const [status, setStatus] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [userRepos, setUserRepos] = useState<string[]>([]);
+    const [selectedRepo, setSelectedRepo] = useState<string | null>(null);
 
+    // Fetch user's GitHub repositories
     useEffect(() => {
-        if (session) {
+        if (session?.token?.accessToken) {
+            const fetchUserRepos = async () => {
+                try {
+                    const accessToken = session?.token?.accessToken;
+                    if (!accessToken) return;
+
+                    const response = await fetch(`${API_URL}/git/user-repos`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${accessToken}`
+                        }
+                    });
+
+                    if (!response.ok) throw new Error('Failed to fetch repositories');
+
+                    const repos = await response.json();
+                    setUserRepos(repos);
+
+                    // Auto-select first repo if available
+                    if (repos.length > 0 && !selectedRepo) {
+                        setSelectedRepo(repos[0]);
+                    }
+                } catch (err) {
+                    console.error('Error fetching repos:', err);
+                    setError(err instanceof Error ? err.message : 'Failed to fetch repositories');
+                }
+            };
+
+            fetchUserRepos();
+        }
+    }, [session, selectedRepo]);
+
+    // Fetch commits for selected repository
+    useEffect(() => {
+        if (session && selectedRepo) {
             const fetchData = async () => {
                 setLoading(true);
                 setError(null);
                 try {
-                    const headers = {
+                    // Get the token from the session
+                    const token = session.token?.accessToken;
+
+                    const headers: HeadersInit = {
                         'Content-Type': 'application/json',
                     };
 
-                    // Fetch commits
+                    // Add authorization header if token exists
+                    if (token) {
+                        headers['Authorization'] = `Bearer ${token}`;
+                    }
+
+                    // Fetch commits for the selected GitHub repository
                     const commitsResponse = await fetch(
-                        `${API_URL}/git/sync?repoPath=/Users/omci/Documents/Perso/Gibwerk`,
+                        `${API_URL}/git/github-commits?repo=${selectedRepo}`,
                         { method: 'GET', headers }
                     );
+
                     if (!commitsResponse.ok) {
                         const errorText = await commitsResponse.text();
                         throw new Error(`Failed to fetch commits: ${errorText}`);
                     }
+
                     const commitsData = await commitsResponse.json();
                     setCommits(commitsData);
 
-                    // Fetch repo status
-                    const statusResponse = await fetch(
-                        `${API_URL}/git/status?repoPath=/Users/omci/Documents/Perso/Gibwerk`,
-                        { method: 'GET', headers }
-                    );
-                    if (!statusResponse.ok) {
-                        const errorText = await statusResponse.text();
-                        throw new Error(`Failed to fetch status: ${errorText}`);
-                    }
-                    const statusData = await statusResponse.text();
-                    setStatus(statusData);
                 } catch (error) {
                     console.error('Error:', error);
                     setError(error instanceof Error ? error.message : 'An error occurred');
@@ -58,7 +95,7 @@ export default function CalendarClient() {
 
             fetchData();
         }
-    }, [session, setCommits]);
+    }, [session, selectedRepo, setCommits]);
 
     const events = commits.map((commit) => ({
         title: commit.summary || commit.message,
@@ -72,6 +109,63 @@ export default function CalendarClient() {
                     <p>{error}</p>
                 </div>
             )}
+
+            {userRepos.length > 0 && (
+                <div className="mb-4">
+                    <div className="flex items-center justify-between mb-2">
+                        <label htmlFor="repo-select" className="block text-sm font-medium text-gray-700">
+                            Select Repository
+                        </label>
+                        <button
+                            onClick={() => {
+                                if (session?.token?.accessToken) {
+                                    const fetchUserRepos = async () => {
+                                        try {
+                                            const accessToken = session?.token?.accessToken;
+                                            if (!accessToken) return;
+
+                                            const response = await fetch(`${API_URL}/git/user-repos`, {
+                                                method: 'GET',
+                                                headers: {
+                                                    'Content-Type': 'application/json',
+                                                    'Authorization': `Bearer ${accessToken}`
+                                                }
+                                            });
+
+                                            if (!response.ok) throw new Error('Failed to fetch repositories');
+
+                                            const repos = await response.json();
+                                            setUserRepos(repos);
+                                        } catch (err) {
+                                            console.error('Error refreshing repos:', err);
+                                            setError(err instanceof Error ? err.message : 'Failed to refresh repositories');
+                                        }
+                                    };
+
+                                    fetchUserRepos();
+                                }
+                            }}
+                            className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+                        >
+                            Refresh
+                        </button>
+                    </div>
+                    <select
+                        id="repo-select"
+                        className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                        value={selectedRepo || ''}
+                        onChange={(e) => setSelectedRepo(e.target.value)}
+                    >
+                        <option value="">Select a repository</option>
+                        {userRepos.map((repo) => (
+                            <option key={repo} value={repo}>
+                                {repo}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+            )}
+
             {loading ? (
                 <div className="flex justify-center items-center h-64">
                     <p className="text-gray-600">Loading...</p>
