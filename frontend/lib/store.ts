@@ -3,10 +3,10 @@
 import { create } from 'zustand';
 
 interface Commit {
-    id: number;
+    id?: number;
     hash: string;
     author: string;
-    date: string;
+    date: string | Date;
     message: string;
     summary?: string;
 }
