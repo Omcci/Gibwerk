@@ -1,13 +1,12 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import { Providers } from "./providers";
+import './globals.css';
+import { Inter } from 'next/font/google';
+import { NextAuthProvider } from './providers';
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ['latin'] });
 
-export const metadata: Metadata = {
+export const metadata = {
   title: 'Git Calendar',
-  description: 'Visualize your git commits in a calendar',
+  description: 'View your GitHub contributions in a calendar format',
 };
 
 export default function RootLayout({
@@ -18,7 +17,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Providers>{children}</Providers>
+        <NextAuthProvider>{children}</NextAuthProvider>
       </body>
     </html>
   );

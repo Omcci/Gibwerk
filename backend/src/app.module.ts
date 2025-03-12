@@ -13,16 +13,17 @@ import { McpModule } from './mcp/mcp.module';
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'postgres',
-      password: 'password',
-      database: 'git_calendar',
+      host: process.env.DATABASE_HOST || 'postgres',
+      port: parseInt(process.env.DATABASE_PORT || '5432', 10),
+      username: process.env.DATABASE_USER || 'postgres',
+      password: process.env.DATABASE_PASSWORD || 'password',
+      database: process.env.DATABASE_NAME || 'git_calendar',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
+      logging: true, // Enable logging to debug connection issues
     }),
     GitModule,
-    GitModule
+    McpModule
   ],
   controllers: [AppController],
   providers: [AppService],

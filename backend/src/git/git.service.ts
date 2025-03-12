@@ -12,63 +12,84 @@ export class GitService {
     ) { }
 
     async syncCommits(repoPath: string): Promise<Commit[]> {
-        const commits = await this.runMcpGitLog(repoPath);
+        const commits = await this.getGitLog(repoPath);
         return this.commitRepository.save(commits);
     }
 
-    private runMcpGitLog(repoPath: string): Promise<Commit[]> {
+    private getGitLog(repoPath: string): Promise<Commit[]> {
         return new Promise((resolve, reject) => {
-            const mcpProcess = spawn('uvx', [
-                'mcp-server-git',
-                '--repository',
+            const gitProcess = spawn('git', [
+                '-C',
                 repoPath,
-                'git_log',
-                '--max-count',
-                '10',
+                'log',
+                '--pretty=format:%H%n%an%n%at%n%s%n%b%n---',
+                '-n',
+                '10'
             ]);
-            let output = '';
 
-            mcpProcess.stdout.on('data', (data) => {
+            let output = '';
+            gitProcess.stdout.on('data', (data) => {
                 output += data.toString();
             });
 
-            mcpProcess.on('close', (code) => {
+            gitProcess.stderr.on('data', (data) => {
+                console.error('Git error:', data.toString());
+            });
+
+            gitProcess.on('close', (code) => {
                 if (code === 0) {
-                    const commits = JSON.parse(output).map((entry: any) => ({
-                        hash: entry.hash,
-                        author: entry.author,
-                        date: new Date(entry.date),
-                        message: entry.message,
-                        summary: '',
-                    }));
+                    const commits = output
+                        .split('---\n')
+                        .filter(Boolean)
+                        .map(commitStr => {
+                            const [hash, author, timestamp, subject, ...bodyLines] = commitStr.split('\n');
+                            const commit = new Commit();
+                            commit.hash = hash;
+                            commit.author = author;
+                            commit.date = new Date(parseInt(timestamp) * 1000);
+                            commit.message = subject;
+                            commit.summary = bodyLines.join('\n').trim();
+                            return commit;
+                        });
                     resolve(commits);
                 } else {
-                    reject(new Error('MCP process failed'));
+                    reject(new Error('Git process failed'));
                 }
+            });
+
+            gitProcess.on('error', (error) => {
+                reject(error);
             });
         });
     }
 
     async getRepoStatus(repoPath: string): Promise<string> {
         return new Promise((resolve, reject) => {
-            const mcpProcess = spawn('uvx', [
-                'mcp-server-git',
-                '--repository',
+            const gitProcess = spawn('git', [
+                '-C',
                 repoPath,
-                'git_status',
+                'status',
             ]);
 
             let output = '';
-            mcpProcess.stdout.on('data', (data) => {
+            gitProcess.stdout.on('data', (data) => {
                 output += data.toString();
             });
 
-            mcpProcess.on('close', (code) => {
+            gitProcess.stderr.on('data', (data) => {
+                console.error('Git error:', data.toString());
+            });
+
+            gitProcess.on('close', (code) => {
                 if (code === 0) {
                     resolve(output.trim());
                 } else {
                     reject(new Error('Failed to get repo status'));
                 }
+            });
+
+            gitProcess.on('error', (error) => {
+                reject(error);
             });
         });
     }

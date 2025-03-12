@@ -1,4 +1,4 @@
-.PHONY: help install dev build up down clean logs test env-setup
+.PHONY: help install dev build up down clean logs test env-setup restart purge rebuild
 
 # Colors for terminal output
 GREEN := \033[0;32m
@@ -52,10 +52,24 @@ down: ## Stop all Docker containers
 	@echo "${GREEN}Stopping Docker containers...${NC}"
 	docker compose down
 
+restart: down up ## Restart all containers
+	@echo "${GREEN}Containers restarted successfully${NC}"
+
+rebuild: down ## Rebuild and restart containers
+	@echo "${GREEN}Rebuilding and restarting containers...${NC}"
+	docker compose build --no-cache
+	docker compose up -d
+
 clean: ## Stop containers and remove volumes
 	@echo "${GREEN}Cleaning up Docker resources...${NC}"
 	docker compose down -v
 	docker system prune -f
+
+purge: ## Remove all Docker resources including images
+	@echo "${GREEN}Removing all Docker resources...${NC}"
+	docker compose down -v
+	docker system prune -af --volumes
+	@echo "${GREEN}All Docker resources have been removed${NC}"
 
 ## Utility commands
 logs: ## Show logs from all containers
@@ -89,4 +103,7 @@ prod-up: env-setup ## Start production containers
 
 prod-down: ## Stop production containers
 	@echo "${GREEN}Stopping production containers...${NC}"
-	docker compose -f docker-compose.yml down 
+	docker compose -f docker-compose.yml down
+
+prod-restart: prod-down prod-up ## Restart production containers
+	@echo "${GREEN}Production containers restarted successfully${NC}" 
