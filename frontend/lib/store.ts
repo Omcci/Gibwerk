@@ -14,9 +14,11 @@ interface Commit {
 interface GitState {
     commits: Commit[];
     setCommits: (commits: Commit[]) => void;
+    clearCommits: () => void;
 }
 
 export const useGitStore = create<GitState>((set) => ({
     commits: [],
-    setCommits: (commits) => set({ commits }),
+    setCommits: (commits: Commit[]) => set({ commits }),
+    clearCommits: () => set({ commits: [] }),
 }));

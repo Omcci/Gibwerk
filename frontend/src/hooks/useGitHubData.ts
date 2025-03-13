@@ -25,6 +25,11 @@ export function useGitHubRepositories() {
             return response.json() as Promise<string[]>;
         },
         enabled: !!accessToken,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+        gcTime: 10 * 60 * 1000, // 10 minutes (garbage collection time, formerly cacheTime)
+        refetchOnWindowFocus: false,
+        refetchOnMount: true,
+        refetchOnReconnect: false,
     });
 }
 
@@ -57,5 +62,10 @@ export function useGitHubCommits(repoName: string | null) {
             return commitsResponse.json() as Promise<Commit[]>;
         },
         enabled: !!accessToken && !!repoName,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+        gcTime: 10 * 60 * 1000, // 10 minutes (garbage collection time, formerly cacheTime)
+        refetchOnWindowFocus: false,
+        refetchOnMount: true,
+        refetchOnReconnect: false,
     });
 } 

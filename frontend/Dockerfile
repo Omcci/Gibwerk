@@ -2,44 +2,31 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Install dependencies
 COPY package*.json ./
 RUN npm ci
 
+# Copy source code
 COPY . .
 
-ARG GITHUB_ID
-ARG GITHUB_SECRET
-ARG NEXTAUTH_SECRET
-ARG NEXTAUTH_URL
-
-ENV GITHUB_ID=$GITHUB_ID
-ENV GITHUB_SECRET=$GITHUB_SECRET
-ENV NEXTAUTH_SECRET=$NEXTAUTH_SECRET
-ENV NEXTAUTH_URL=$NEXTAUTH_URL
-
+# Build the application
 RUN npm run build
 
 FROM node:20-alpine AS production
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm ci --only=production
-
-COPY --from=builder /app/.next ./.next
+# Copy built application
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
 
-ARG GITHUB_ID
-ARG GITHUB_SECRET
-ARG NEXTAUTH_SECRET
-ARG NEXTAUTH_URL
+# Set environment variables
+ENV NODE_ENV=production
+ENV PORT=3000
 
-ENV GITHUB_ID=$GITHUB_ID
-ENV GITHUB_SECRET=$GITHUB_SECRET
-ENV NEXTAUTH_SECRET=$NEXTAUTH_SECRET
-ENV NEXTAUTH_URL=$NEXTAUTH_URL
-
+# Expose port
 EXPOSE 3000
-CMD ["npm", "start"] 
+
+# Start the application
+CMD ["node", "server.js"] 
