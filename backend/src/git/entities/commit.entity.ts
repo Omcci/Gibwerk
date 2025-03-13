@@ -19,4 +19,10 @@ export class Commit {
 
     @Column({ nullable: true })
     summary: string;
+
+    @Column({ type: 'text', nullable: true })
+    diff: string;
+
+    @Column({ type: 'text', nullable: true })
+    generatedSummary: string;
 }

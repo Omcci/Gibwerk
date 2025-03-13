@@ -5,4 +5,6 @@ export interface Commit {
     date: string | Date;
     message: string;
     summary?: string;
+    diff?: string;
+    generatedSummary?: string;
 } 

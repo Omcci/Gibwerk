@@ -9,7 +9,8 @@ import {
     DrawerDescription,
     DrawerFooter,
     DrawerHeader,
-    DrawerTitle
+    DrawerTitle,
+    DrawerOverlay
 } from './ui/drawer';
 import {
     Dialog,
@@ -22,29 +23,87 @@ import {
 } from './ui/dialog';
 import { CommitDetails } from './CommitDetails';
 import { useMediaQuery } from '../hooks/use-media-query';
+import { Loader2 } from 'lucide-react';
 
 interface CommitDetailsDrawerProps {
     isOpen: boolean;
     onClose: () => void;
     commit: Commit | null;
+    onGenerateSummary?: (commitId: number) => Promise<void>;
+    isGeneratingSummary?: boolean;
 }
 
-export function CommitDetailsDrawer({ isOpen, onClose, commit }: CommitDetailsDrawerProps) {
+export function CommitDetailsDrawer({
+    isOpen,
+    onClose,
+    commit,
+    onGenerateSummary,
+    isGeneratingSummary = false,
+}: CommitDetailsDrawerProps) {
     const isDesktop = useMediaQuery("(min-width: 768px)");
+
+    if (!commit) return null;
+
+    const formattedDate = new Date(commit.date).toLocaleString();
 
     if (isDesktop) {
         return (
-            <Dialog open={isOpen} onOpenChange={onClose}>
-                <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-auto dialog-content">
+            <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+                <DialogContent className="sm:max-w-[600px]">
                     <DialogHeader>
                         <DialogTitle>Commit Details</DialogTitle>
                         <DialogDescription>
-                            {commit?.summary || 'Commit information'}
+                            View details for commit <code>{commit.hash.substring(0, 7)}</code>
                         </DialogDescription>
                     </DialogHeader>
-                    {commit && <CommitDetails commit={commit} />}
-                    <DialogFooter>
-                        <Button variant="outline" onClick={onClose}>Close</Button>
+                    <div className="space-y-4">
+                        <div>
+                            <h3 className="font-medium">Message</h3>
+                            <p className="text-sm">{commit.message}</p>
+                        </div>
+                        <div>
+                            <h3 className="font-medium">Author</h3>
+                            <p className="text-sm">{commit.author}</p>
+                        </div>
+                        <div>
+                            <h3 className="font-medium">Date</h3>
+                            <p className="text-sm">{formattedDate}</p>
+                        </div>
+                        {commit.summary && (
+                            <div>
+                                <h3 className="font-medium">Description</h3>
+                                <p className="text-sm whitespace-pre-wrap">{commit.summary}</p>
+                            </div>
+                        )}
+                        {commit.generatedSummary && (
+                            <div>
+                                <h3 className="font-medium">AI Summary</h3>
+                                <div className="bg-muted p-3 rounded-md">
+                                    <p className="text-sm whitespace-pre-wrap">{commit.generatedSummary}</p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    <DialogFooter className="flex justify-between">
+                        {onGenerateSummary && commit.id && !commit.generatedSummary && (
+                            <Button
+                                variant="outline"
+                                onClick={() => onGenerateSummary(commit.id!)}
+                                disabled={isGeneratingSummary}
+                            >
+                                {isGeneratingSummary ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Generating...
+                                    </>
+                                ) : (
+                                    "Generate AI Summary"
+                                )}
+                            </Button>
+                        )}
+                        <Button variant="outline" onClick={onClose}>
+                            Close
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -52,25 +111,67 @@ export function CommitDetailsDrawer({ isOpen, onClose, commit }: CommitDetailsDr
     }
 
     return (
-        <Drawer
-            open={isOpen}
-            onClose={onClose}
-            size="lg"
-            className="bg-white dark:bg-gray-900"
-        >
-            <DrawerHeader>
-                <DrawerTitle>Commit Details</DrawerTitle>
-                <DrawerDescription>
-                    {commit?.summary || 'Commit information'}
-                </DrawerDescription>
-                <DrawerClose onClick={onClose} />
-            </DrawerHeader>
+        <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DrawerContent>
-                {commit && <CommitDetails commit={commit} />}
+                <DrawerHeader>
+                    <DrawerTitle>Commit Details</DrawerTitle>
+                    <DrawerDescription>
+                        View details for commit <code>{commit.hash.substring(0, 7)}</code>
+                    </DrawerDescription>
+                </DrawerHeader>
+                <div className="px-4 space-y-4">
+                    <div>
+                        <h3 className="font-medium">Message</h3>
+                        <p className="text-sm">{commit.message}</p>
+                    </div>
+                    <div>
+                        <h3 className="font-medium">Author</h3>
+                        <p className="text-sm">{commit.author}</p>
+                    </div>
+                    <div>
+                        <h3 className="font-medium">Date</h3>
+                        <p className="text-sm">{formattedDate}</p>
+                    </div>
+                    {commit.summary && (
+                        <div>
+                            <h3 className="font-medium">Description</h3>
+                            <p className="text-sm whitespace-pre-wrap">{commit.summary}</p>
+                        </div>
+                    )}
+                    {commit.generatedSummary && (
+                        <div>
+                            <h3 className="font-medium">AI Summary</h3>
+                            <div className="bg-muted p-3 rounded-md">
+                                <p className="text-sm whitespace-pre-wrap">{commit.generatedSummary}</p>
+                            </div>
+                        </div>
+                    )}
+                </div>
+                <DrawerFooter className="flex flex-col sm:flex-row justify-between gap-2">
+                    {onGenerateSummary && commit.id && !commit.generatedSummary && (
+                        <Button
+                            variant="outline"
+                            onClick={() => onGenerateSummary(commit.id!)}
+                            disabled={isGeneratingSummary}
+                            className="w-full sm:w-auto"
+                        >
+                            {isGeneratingSummary ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Generating...
+                                </>
+                            ) : (
+                                "Generate AI Summary"
+                            )}
+                        </Button>
+                    )}
+                    <DrawerClose asChild>
+                        <Button variant="outline" className="w-full sm:w-auto">
+                            Close
+                        </Button>
+                    </DrawerClose>
+                </DrawerFooter>
             </DrawerContent>
-            <DrawerFooter>
-                <Button variant="outline" onClick={onClose}>Close</Button>
-            </DrawerFooter>
         </Drawer>
     );
 }

@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@fullcalendar/interaction": "^6.1.15",
+    "react-markdown": "^10.1.0"
+  }
+}

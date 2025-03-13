@@ -2,6 +2,7 @@
 
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
+import interactionPlugin from '@fullcalendar/interaction';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Button } from './ui/button';
 import { Skeleton } from './ui/skeleton';
@@ -15,6 +16,7 @@ interface CommitCalendarProps {
     calendarView: 'dayGridMonth' | 'dayGridWeek' | 'dayGridDay';
     setCalendarView: (view: 'dayGridMonth' | 'dayGridWeek' | 'dayGridDay') => void;
     onCommitClick: (info: any) => void;
+    onDateClick?: (info: any) => void;
 }
 
 export function CommitCalendar({
@@ -23,7 +25,8 @@ export function CommitCalendar({
     isLoading,
     calendarView,
     setCalendarView,
-    onCommitClick
+    onCommitClick,
+    onDateClick
 }: CommitCalendarProps) {
     return (
         <Card className="lg:col-span-2">
@@ -79,7 +82,7 @@ export function CommitCalendar({
                         "custom-calendar" // Custom class for additional styling
                     )}>
                         <FullCalendar
-                            plugins={[dayGridPlugin]}
+                            plugins={[dayGridPlugin, interactionPlugin]}
                             initialView={calendarView}
                             events={events}
                             height="auto"
@@ -97,6 +100,7 @@ export function CommitCalendar({
                             eventColor="#3b82f6" // Blue color for events
                             eventTextColor="#ffffff"
                             eventClick={onCommitClick}
+                            dateClick={onDateClick}
                             dayMaxEvents={3}
                             moreLinkClick="popover"
                         />
