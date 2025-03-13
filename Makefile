@@ -1,4 +1,4 @@
-.PHONY: help install dev build up down clean logs test env-setup restart purge rebuild
+.PHONY: help install dev build up down clean logs test env-setup restart purge rebuild dev-local frontend backend backend-debug
 
 # Colors for terminal output
 GREEN := \033[0;32m
@@ -19,25 +19,58 @@ help: ## Show this help menu
 	{ lastLine = $$0 }' $(MAKEFILE_LIST)
 
 ## Environment commands
-env-setup: ## Set up environment files
-	@echo "${GREEN}Setting up environment files...${NC}"
-	@if [ ! -f .env ]; then \
-		echo "Creating .env file..."; \
-		echo "ANTHROPIC_API_KEY=your_anthropic_api_key_here" > .env; \
-	fi
-	@echo "${GREEN}Environment files setup complete${NC}"
+# env-setup: ## Set up environment files
+# 	@echo "${GREEN}Setting up environment files...${NC}"
+# 	@if [ ! -f .env ]; then \
+# 		echo "Creating .env file..."; \
+# 		echo "ANTHROPIC_API_KEY=your_anthropic_api_key_here" > .env; \
+# 	fi
+# 	@echo "${GREEN}Environment files setup complete${NC}"
 
 ## Development commands
-install: env-setup ## Install dependencies for both frontend and backend
-	@echo "${GREEN}Installing frontend dependencies...${NC}"
-	cd frontend && npm install
-	@echo "${GREEN}Installing backend dependencies...${NC}"
-	cd backend && npm install
+# install: env-setup ## Install dependencies for both frontend and backend
+# 	@echo "${GREEN}Installing frontend dependencies...${NC}"
+# 	cd frontend && npm install
+# 	@echo "${GREEN}Installing backend dependencies...${NC}"
+# 	cd backend && npm install
 
 dev: env-setup ## Start development servers
 	@echo "${GREEN}Starting development servers...${NC}"
+	@echo "${GREEN}Starting PostgreSQL container...${NC}"
 	docker compose up postgres -d
+	@echo "${GREEN}Waiting for PostgreSQL to be ready...${NC}"
+	@for i in 1 2 3 4 5; do \
+		echo "Checking PostgreSQL readiness (attempt $$i)..."; \
+		if docker compose exec postgres pg_isready -U postgres -d git_calendar > /dev/null 2>&1; then \
+			echo "${GREEN}PostgreSQL is ready!${NC}"; \
+			break; \
+		fi; \
+		if [ $$i -eq 5 ]; then \
+			echo "PostgreSQL is not ready after 5 attempts. Starting services anyway..."; \
+		fi; \
+		sleep 2; \
+	done
+	@echo "${GREEN}Starting frontend and backend...${NC}"
 	cd frontend && npm run dev & cd backend && npm run start:dev
+
+# dev-local: env-setup ## Start development servers without Docker
+# 	@echo "${GREEN}Starting development servers without Docker...${NC}"
+# 	@echo "${GREEN}Checking PostgreSQL...${NC}"
+# 	@bash ./scripts/check-postgres.sh
+# 	@echo "${GREEN}Starting frontend and backend...${NC}"
+# 	cd frontend && npm run dev & cd backend && npm run start:dev
+
+# frontend: env-setup ## Start only the frontend
+# 	@echo "${GREEN}Starting frontend...${NC}"
+# 	cd frontend && npm run dev
+
+# backend: env-setup ## Start only the backend
+# 	@echo "${GREEN}Starting backend...${NC}"
+# 	cd backend && npm run start:dev
+
+# backend-debug: env-setup ## Start backend with debugging
+# 	@echo "${GREEN}Starting backend in debug mode...${NC}"
+# 	cd backend && npm run start:debug
 
 ## Docker commands
 build: env-setup ## Build all Docker images
