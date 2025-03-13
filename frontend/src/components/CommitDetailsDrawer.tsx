@@ -11,7 +11,17 @@ import {
     DrawerHeader,
     DrawerTitle
 } from './ui/drawer';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogClose
+} from './ui/dialog';
 import { CommitDetails } from './CommitDetails';
+import { useMediaQuery } from '../hooks/use-media-query';
 
 interface CommitDetailsDrawerProps {
     isOpen: boolean;
@@ -20,6 +30,27 @@ interface CommitDetailsDrawerProps {
 }
 
 export function CommitDetailsDrawer({ isOpen, onClose, commit }: CommitDetailsDrawerProps) {
+    const isDesktop = useMediaQuery("(min-width: 768px)");
+
+    if (isDesktop) {
+        return (
+            <Dialog open={isOpen} onOpenChange={onClose}>
+                <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-auto dialog-content">
+                    <DialogHeader>
+                        <DialogTitle>Commit Details</DialogTitle>
+                        <DialogDescription>
+                            {commit?.summary || 'Commit information'}
+                        </DialogDescription>
+                    </DialogHeader>
+                    {commit && <CommitDetails commit={commit} />}
+                    <DialogFooter>
+                        <Button variant="outline" onClick={onClose}>Close</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        );
+    }
+
     return (
         <Drawer
             open={isOpen}

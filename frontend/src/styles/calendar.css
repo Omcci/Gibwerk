@@ -1,44 +1,44 @@
 Custom calendar styling .custom-calendar .fc-daygrid-day.fc-day-today {
-    background-color: rgba(59, 130, 246, 0.1);
+    background-color: rgba(59, 130, 246, 0.1) !important;
 }
 
 .custom-calendar .fc-daygrid-day-number {
-    font-size: 0.875rem;
-    padding: 0.5rem;
+    font-size: 0.875rem !important;
+    padding: 0.5rem !important;
 }
 
 .custom-calendar .fc-col-header-cell {
-    padding: 0.5rem 0;
-    background-color: rgba(241, 245, 249, 0.8);
+    padding: 0.5rem 0 !important;
+    background-color: rgba(241, 245, 249, 0.8) !important;
 }
 
 .custom-calendar .fc-event {
-    border-radius: 4px;
-    border: none;
-    padding: 2px 4px;
-    font-size: 0.75rem;
-    cursor: pointer;
-    transition: transform 0.1s ease-in-out;
+    border-radius: 4px !important;
+    border: none !important;
+    padding: 2px 4px !important;
+    font-size: 0.75rem !important;
+    cursor: pointer !important;
+    transition: transform 0.1s ease-in-out !important;
 }
 
 .custom-calendar .fc-event:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
 }
 
 .custom-calendar .fc-toolbar-title {
-    font-size: 1.25rem;
-    font-weight: 600;
+    font-size: 1.25rem !important;
+    font-weight: 600 !important;
 }
 
 .custom-calendar .fc-button {
-    background-color: #f1f5f9;
-    border-color: #e2e8f0;
-    color: #475569;
+    background-color: #f1f5f9 !important;
+    border-color: #e2e8f0 !important;
+    color: #475569 !important;
 }
 
 .custom-calendar .fc-button:hover {
-    background-color: #e2e8f0;
+    background-color: #e2e8f0 !important;
 }
 
 .custom-calendar .fc-button-active {
@@ -52,14 +52,25 @@ Custom calendar styling .custom-calendar .fc-daygrid-day.fc-day-today {
     background-color: white !important;
 }
 
+/* Dialog styling */
+.dialog-overlay {
+    background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+.dialog-content {
+    background-color: white !important;
+    border-radius: 0.5rem !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
 /* Responsive adjustments */
 @media (max-width: 640px) {
     .custom-calendar .fc-toolbar {
-        flex-direction: column;
-        gap: 0.5rem;
+        flex-direction: column !important;
+        gap: 0.5rem !important;
     }
 
     .custom-calendar .fc-toolbar-title {
-        font-size: 1rem;
+        font-size: 1rem !important;
     }
 }
