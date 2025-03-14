@@ -9,6 +9,7 @@ interface Commit {
     date: string | Date;
     message: string;
     summary?: string;
+    repository?: string;
 }
 
 interface GitState {

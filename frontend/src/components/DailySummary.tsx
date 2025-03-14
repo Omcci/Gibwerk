@@ -1,10 +1,11 @@
-import { useState } from 'react';
-import { useGenerateDailySummary } from '../hooks/useGitHubData';
+import { useEffect, useState } from 'react';
+import { useGenerateDailySummary, useGetDailySummary } from '../hooks/useGitHubData';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/card';
 import { Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import ReactMarkdown from 'react-markdown';
+import { ScrollArea } from './ui/scroll-area';
 
 interface DailySummaryProps {
     date: Date;
@@ -13,17 +14,40 @@ interface DailySummaryProps {
 
 export function DailySummary({ date, repoFullName }: DailySummaryProps) {
     const [summary, setSummary] = useState<string | null>(null);
+    const formattedDate = format(date, 'yyyy-MM-dd');
+
+    // Query to get existing summary
+    const {
+        data: existingSummary,
+        isLoading: isLoadingSummary,
+        isError: isErrorFetching,
+        error: fetchError
+    } = useGetDailySummary(
+        formattedDate,
+        repoFullName || undefined
+    );
+
+    // Mutation to generate a new summary
     const {
         mutate: generateDailySummary,
         isPending: isGenerating,
-        isError,
-        error
+        isError: isErrorGenerating,
+        error: generateError
     } = useGenerateDailySummary();
+
+    // Reset summary when date or repo changes
+    useEffect(() => {
+        // If we have data, use it
+        if (existingSummary) {
+            setSummary(existingSummary);
+        } else if (!isLoadingSummary) {
+            // If we don't have data and we're not loading, reset the summary
+            setSummary(null);
+        }
+    }, [existingSummary, isLoadingSummary, date, repoFullName]);
 
     const handleGenerateSummary = () => {
         if (!repoFullName) return;
-
-        const formattedDate = format(date, 'yyyy-MM-dd');
 
         generateDailySummary(
             { date: formattedDate, repoFullName },
@@ -34,6 +58,10 @@ export function DailySummary({ date, repoFullName }: DailySummaryProps) {
             }
         );
     };
+
+    const isLoading = isLoadingSummary || isGenerating;
+    const isError = isErrorFetching || isErrorGenerating;
+    const error = fetchError || generateError;
 
     if (!repoFullName) {
         return (
@@ -48,41 +76,45 @@ export function DailySummary({ date, repoFullName }: DailySummaryProps) {
 
     return (
         <Card className="h-full flex flex-col">
-            <CardHeader>
+            <CardHeader className="py-3">
                 <CardTitle>Daily Summary</CardTitle>
                 <CardDescription>
                     {format(date, 'MMMM d, yyyy')} - {repoFullName}
                 </CardDescription>
             </CardHeader>
-            <CardContent className="flex-grow">
-                {isGenerating ? (
-                    <div className="flex items-center justify-center h-full">
-                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <CardContent className="flex-grow overflow-hidden p-0">
+                <ScrollArea className="h-[350px] w-full">
+                    <div className="p-4 w-full max-w-full">
+                        {isLoading ? (
+                            <div className="flex items-center justify-center h-full py-8">
+                                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                            </div>
+                        ) : summary ? (
+                            <div className="prose prose-sm dark:prose-invert max-w-none overflow-hidden">
+                                <ReactMarkdown>{summary}</ReactMarkdown>
+                            </div>
+                        ) : isError ? (
+                            <div className="text-destructive">
+                                <p>Error: {error?.message}</p>
+                            </div>
+                        ) : (
+                            <div className="text-center text-muted-foreground py-8">
+                                <p className="mb-4">No summary available for this date</p>
+                            </div>
+                        )}
                     </div>
-                ) : summary ? (
-                    <div className="prose prose-sm dark:prose-invert max-w-none">
-                        <ReactMarkdown>{summary}</ReactMarkdown>
-                    </div>
-                ) : isError ? (
-                    <div className="text-destructive">
-                        <p>Error generating summary: {error?.message}</p>
-                    </div>
-                ) : (
-                    <div className="text-center text-muted-foreground h-full flex flex-col items-center justify-center">
-                        <p className="mb-4">No summary generated yet</p>
-                    </div>
-                )}
+                </ScrollArea>
             </CardContent>
-            <CardFooter>
+            <CardFooter className="pt-2">
                 <Button
                     onClick={handleGenerateSummary}
-                    disabled={isGenerating || !repoFullName}
+                    disabled={isLoading || !repoFullName}
                     className="w-full"
                 >
-                    {isGenerating ? (
+                    {isLoading ? (
                         <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Generating...
+                            {isGenerating ? "Generating..." : "Loading..."}
                         </>
                     ) : summary ? (
                         "Regenerate Summary"

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Headers, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Headers, BadRequestException, Query } from '@nestjs/common';
 import { GitService } from './git.service';
 import { Commit } from './entities/commit.entity';
 import { z } from 'zod';
@@ -45,25 +45,29 @@ export class GitController {
     }
 
     @Post('generate-commit-summary')
-    async generateCommitSummary(@Body('commitId') commitId: number): Promise<Commit> {
+    async generateCommitSummary(
+        @Body('commitId') commitId: number,
+        @Body('repoContext') repoContext?: string
+    ): Promise<Commit> {
         const schema = z.object({
             commitId: z.number().int().positive(),
+            repoContext: z.string().optional(),
         });
 
         try {
-            schema.parse({ commitId });
+            schema.parse({ commitId, repoContext });
         } catch (error) {
-            throw new BadRequestException('Invalid commitId. Must be a positive integer.');
+            throw new BadRequestException('Invalid input. commitId must be a positive integer.');
         }
 
-        return this.gitService.generateCommitSummary(commitId);
+        return this.gitService.generateCommitSummary(commitId, repoContext);
     }
 
     @Post('generate-daily-summary')
     async generateDailySummary(
         @Body('date') date: string,
         @Body('repoFullName') repoFullName: string,
-    ): Promise<string> {
+    ): Promise<{ text: string }> {
         const schema = z.object({
             date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format'),
             repoFullName: z.string().regex(/^[^\/]+\/[^\/]+$/, 'Repository must be in format "owner/repo"'),
@@ -76,5 +80,28 @@ export class GitController {
         }
 
         return this.gitService.generateDailySummary(date, repoFullName);
+    }
+
+    @Get('daily-summary')
+    async getDailySummary(
+        @Query('date') date: string,
+        @Query('repoFullName') repoFullName: string,
+    ): Promise<{ text: string } | { exists: false }> {
+        const schema = z.object({
+            date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format'),
+            repoFullName: z.string().regex(/^[^\/]+\/[^\/]+$/, 'Repository must be in format "owner/repo"'),
+        });
+
+        try {
+            schema.parse({ date, repoFullName });
+        } catch (error) {
+            throw new BadRequestException('Invalid parameters. Date must be in YYYY-MM-DD format and repoFullName must be in "owner/repo" format.');
+        }
+
+        const summary = await this.gitService.getDailySummary(date, repoFullName);
+        if (summary) {
+            return summary;
+        }
+        return { exists: false };
     }
 }

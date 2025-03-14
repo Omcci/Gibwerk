@@ -1,5 +1,10 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+
+// Load .env from root directory (one level up from backend)
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -13,5 +18,6 @@ async function bootstrap() {
   });
 
   await app.listen(process.env.PORT || 3001);
+  console.log(`Application is running on port ${process.env.PORT || 3001}`);
 }
 bootstrap();

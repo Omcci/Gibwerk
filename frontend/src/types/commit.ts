@@ -7,4 +7,5 @@ export interface Commit {
     summary?: string;
     diff?: string;
     generatedSummary?: string;
+    repository?: string;
 } 

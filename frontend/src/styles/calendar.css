@@ -7,6 +7,11 @@ Custom calendar styling .custom-calendar .fc-daygrid-day.fc-day-today {
     padding: 0.5rem !important;
 }
 
+/* Add pointer cursor to calendar days */
+.custom-calendar .fc-daygrid-day {
+    cursor: pointer !important;
+}
+
 .custom-calendar .fc-col-header-cell {
     padding: 0.5rem 0 !important;
     background-color: rgba(241, 245, 249, 0.8) !important;

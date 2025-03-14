@@ -80,10 +80,12 @@ export function useGenerateCommitSummary() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: async (commitId: number) => {
+        mutationFn: async (params: { commitId: number, repoContext?: string }) => {
             if (!accessToken) {
                 throw new Error('Authentication required');
             }
+
+            const { commitId, repoContext } = params;
 
             const response = await fetch(`${API_URL}/git/generate-commit-summary`, {
                 method: 'POST',
@@ -91,7 +93,7 @@ export function useGenerateCommitSummary() {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${accessToken}`
                 },
-                body: JSON.stringify({ commitId })
+                body: JSON.stringify({ commitId, repoContext })
             });
 
             if (!response.ok) {
@@ -116,9 +118,48 @@ export function useGenerateCommitSummary() {
     });
 }
 
+export function useGetDailySummary(date?: string, repoFullName?: string) {
+    const { data: session } = useSession();
+    const accessToken = session?.token?.accessToken;
+
+    return useQuery({
+        queryKey: ['daily-summary', date, repoFullName],
+        queryFn: async () => {
+            if (!accessToken || !date || !repoFullName) {
+                return null;
+            }
+
+            const response = await fetch(
+                `${API_URL}/git/daily-summary?date=${date}&repoFullName=${encodeURIComponent(repoFullName)}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                }
+            );
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || 'Failed to get daily summary');
+            }
+
+            const data = await response.json();
+            if ('exists' in data && data.exists === false) {
+                return null;
+            }
+
+            return data.text;
+        },
+        enabled: !!date && !!repoFullName && !!accessToken,
+    });
+}
+
 export function useGenerateDailySummary() {
     const { data: session } = useSession();
     const accessToken = session?.token?.accessToken;
+    const queryClient = useQueryClient();
 
     return useMutation({
         mutationFn: async ({ date, repoFullName }: { date: string, repoFullName: string }) => {
@@ -140,7 +181,15 @@ export function useGenerateDailySummary() {
                 throw new Error(errorData.message || 'Failed to generate daily summary');
             }
 
-            return response.json() as Promise<string>;
+            const data = await response.json();
+            return data.text;
+        },
+        onSuccess: (summaryText, variables) => {
+            // Update the cache with the new summary using the correct query key
+            queryClient.setQueryData(
+                ['daily-summary', variables.date, variables.repoFullName],
+                summaryText
+            );
         }
     });
 } 

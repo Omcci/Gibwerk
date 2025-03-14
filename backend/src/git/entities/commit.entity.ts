@@ -25,4 +25,7 @@ export class Commit {
 
     @Column({ type: 'text', nullable: true })
     generatedSummary: string;
+
+    @Column({ nullable: true })
+    repository: string;
 }

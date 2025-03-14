@@ -7,4 +7,5 @@ export const CommitSchema = z.object({
     date: z.string(),
     message: z.string(),
     summary: z.string().optional(),
+    repository: z.string().optional(),
 });

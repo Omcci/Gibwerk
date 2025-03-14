@@ -9,7 +9,8 @@ import { RepositorySelector } from '../components/RepositorySelector';
 import { CommitCalendar } from '../components/CommitCalendar';
 import { CommitDetailsDrawer } from '../components/CommitDetailsDrawer';
 import { StatusPanel } from '../components/StatusPanel';
-import { DailySummary } from '../components/DailySummary';
+import { DailyCommitsDialog } from '../components/DailyCommitsDialog';
+import { startOfDay, endOfDay, isSameDay } from 'date-fns';
 
 import '../styles/calendar.css';
 
@@ -26,6 +27,9 @@ export default function CalendarClient() {
     // State for drawer
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [selectedCommit, setSelectedCommit] = useState<Commit | null>(null);
+
+    // State for daily commits dialog
+    const [isDailyDialogOpen, setIsDailyDialogOpen] = useState(false);
 
     // Fetch user's GitHub repositories
     const {
@@ -73,6 +77,14 @@ export default function CalendarClient() {
         }
     })), [commits]);
 
+    // Get commits for the selected date
+    const commitsForSelectedDate = useMemo(() => {
+        return commits.filter((commit: Commit) => {
+            const commitDate = new Date(commit.date);
+            return isSameDay(commitDate, selectedDate);
+        });
+    }, [commits, selectedDate]);
+
     // Clean up function to prevent memory leaks
     useEffect(() => {
         return () => {
@@ -97,7 +109,9 @@ export default function CalendarClient() {
 
     // Handle date click in calendar
     const handleDateClick = (info: any) => {
-        setSelectedDate(new Date(info.date));
+        const clickedDate = new Date(info.date);
+        setSelectedDate(clickedDate);
+        setIsDailyDialogOpen(true);
     };
 
     // Close drawer
@@ -106,12 +120,30 @@ export default function CalendarClient() {
         setSelectedCommit(null);
     };
 
+    // Close daily dialog
+    const handleCloseDailyDialog = () => {
+        setIsDailyDialogOpen(false);
+    };
+
+    // Handle commit click from daily dialog
+    const handleDailyCommitClick = (commit: Commit) => {
+        setSelectedCommit(commit);
+        setIsDailyDialogOpen(false);
+        setIsDrawerOpen(true);
+    };
+
     // Generate summary for a commit
     const handleGenerateSummary = async (commitId: number) => {
         if (!commitId) return;
 
+        // Get the repository name from the selected repository
+        const repoContext = selectedRepo || 'Gibwerk';
+
         try {
-            generateSummary(commitId, {
+            generateSummary({
+                commitId,
+                repoContext
+            }, {
                 onSuccess: (updatedCommit) => {
                     // Update the selected commit if it's the one we just updated
                     if (selectedCommit && selectedCommit.id === commitId) {
@@ -153,21 +185,25 @@ export default function CalendarClient() {
                 />
             </div>
 
-            {/* Daily Summary Section */}
-            <div className="mt-6">
-                <DailySummary
-                    date={selectedDate}
-                    repoFullName={selectedRepo}
-                />
-            </div>
-
             <StatusPanel status={status} />
+
+            {/* Commit Details Drawer */}
             <CommitDetailsDrawer
                 isOpen={isDrawerOpen}
                 onClose={handleCloseDrawer}
                 commit={selectedCommit}
                 onGenerateSummary={handleGenerateSummary}
                 isGeneratingSummary={isGeneratingSummary}
+            />
+
+            {/* Daily Commits Dialog */}
+            <DailyCommitsDialog
+                isOpen={isDailyDialogOpen}
+                onClose={handleCloseDailyDialog}
+                date={selectedDate}
+                repoFullName={selectedRepo}
+                commits={commitsForSelectedDate}
+                onCommitClick={handleDailyCommitClick}
             />
         </div>
     );
