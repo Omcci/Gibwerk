@@ -152,38 +152,164 @@ describe('GitService', () => {
     });
 
     describe('generateCommitSummary', () => {
-        it('should generate a summary for a commit', async () => {
+        it('should generate a structured technical summary for a commit', async () => {
             const mockCommit = {
                 id: 1,
                 hash: 'abc123',
                 author: 'Test User',
                 date: new Date(),
-                message: 'Test commit',
-                diff: 'test diff',
+                message: 'Fix authentication bug',
+                diff: `diff --git a/auth/middleware.js b/auth/middleware.js
+                index abcdef..123456 100644
+                --- a/auth/middleware.js
+                +++ b/auth/middleware.js
+                @@ -10,7 +10,9 @@ const authMiddleware = (req, res, next) => {
+                   if (!token) {
+                     return res.status(401).json({ error: 'No token provided' });
+                   }
+                -  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+                +  jwt.verify(token, process.env.JWT_SECRET, { 
+                +    algorithms: ['HS256', 'RS256'] 
+                +  }, (err, decoded) => {
+                     if (err) {
+                       return res.status(401).json({ error: 'Invalid token' });
+                     }`,
                 repository: 'test-repo',
                 generatedSummary: null,
             };
 
             mockCommitRepository.findOne.mockResolvedValue(mockCommit);
 
-            const mockResponse = {
-                content: 'This is a generated summary',
+            // Mock MCP service to return a structured summary with Markdown formatting
+            const mockSummaryResponse = {
+                content: `### WHAT CHANGED
+Enhanced JWT authentication security in the auth middleware.
+
+- Added explicit algorithm verification in \`jwt.verify()\` calls to prevent signature bypass
+- Implemented support for both HS256 and RS256 signature algorithms
+- Updated error handling for invalid tokens with more specific error messages
+
+### TECHNICAL IMPACT
+- Mitigated potential security vulnerability that could allow forged tokens
+- Improved error logging for authentication failures, aiding in troubleshooting`
             };
+            mockMcpService.generateResponse.mockResolvedValue(mockSummaryResponse);
 
-            mockMcpService.generateResponse.mockResolvedValue(mockResponse);
-            mockCommitRepository.save.mockResolvedValue({
+            // Mock repository save
+            const updatedCommit = {
                 ...mockCommit,
-                generatedSummary: 'This is a generated summary',
-            });
+                generatedSummary: mockSummaryResponse.content
+            };
+            mockCommitRepository.save.mockResolvedValue(updatedCommit);
 
+            // Call the function
             const result = await service.generateCommitSummary(1);
 
-            expect(result.generatedSummary).toBe('This is a generated summary');
+            // Check for Markdown section headers
+            expect(result.generatedSummary).toContain('### WHAT CHANGED');
+            expect(result.generatedSummary).toContain('### TECHNICAL IMPACT');
+
+            // Check for bullet points
+            expect(result.generatedSummary).toMatch(/- Added explicit/);
+            expect(result.generatedSummary).toMatch(/- Implemented support/);
+            expect(result.generatedSummary).toMatch(/- Mitigated potential/);
+
+            // Check for code formatting
+            expect(result.generatedSummary).toContain('`jwt.verify()`');
+
+            // Verify correct calls were made
             expect(mockCommitRepository.findOne).toHaveBeenCalledWith({
                 where: { id: 1 },
             });
             expect(mockMcpService.generateResponse).toHaveBeenCalled();
             expect(mockCommitRepository.save).toHaveBeenCalled();
+        });
+    });
+
+    describe('generateDailySummary', () => {
+        it('should generate a structured daily summary with sections', async () => {
+            // Mock date and repository
+            const date = '2023-01-01';
+            const repoFullName = 'user/test-repo';
+
+            // Mock commits for the day
+            const mockCommits = [
+                {
+                    id: 1,
+                    hash: 'abc123',
+                    author: 'Test User',
+                    date: new Date('2023-01-01T10:00:00Z'),
+                    message: 'Fix authentication bug',
+                    diff: 'test diff',
+                    repository: 'test-repo',
+                    generatedSummary: 'Fixed authentication bug',
+                },
+                {
+                    id: 2,
+                    hash: 'def456',
+                    author: 'Another User',
+                    date: new Date('2023-01-01T14:00:00Z'),
+                    message: 'Add new UI component',
+                    diff: 'more test diff',
+                    repository: 'test-repo',
+                    generatedSummary: 'Added new UI component',
+                }
+            ];
+
+            // Mock repository findOne to return null (no existing summary)
+            mockDailySummaryRepository.findOne.mockResolvedValue(null);
+
+            // Mock commit repository to return our test commits
+            mockCommitRepository.find.mockResolvedValue(mockCommits);
+
+            // Mock MCP service to return a structured summary with Markdown formatting
+            const mockSummaryResponse = {
+                content: `## SUMMARY OF CHANGES
+Authentication system improvements and UI enhancements were the focus of today's development work.
+
+- Fixed JWT authentication bug in auth middleware
+- Added new React component for improved user dashboard experience
+- Updated error handling for authentication failures
+
+## TECHNICAL METRICS
+Today's work included 1 bug fix and 1 UI enhancement across 5 files. The authentication fix resolved an issue affecting user login for approximately 20% of users. The UI component improves dashboard load time by 15%.
+
+## NEXT STEPS
+Browser compatibility testing is still needed for the new UI component, especially for older versions of Safari.`
+            };
+            mockMcpService.generateResponse.mockResolvedValue(mockSummaryResponse);
+
+            // Mock repository save
+            const savedSummary = {
+                id: 1,
+                date: new Date('2023-01-01'),
+                repository: repoFullName,
+                summary: mockSummaryResponse.content,
+                commitCount: 2,
+                contributorCount: 2
+            };
+            mockDailySummaryRepository.save.mockResolvedValue(savedSummary);
+
+            // Call the function
+            const result = await service.generateDailySummary(date, repoFullName);
+
+            // Check for Markdown section headers
+            expect(result.text).toContain('## SUMMARY OF CHANGES');
+            expect(result.text).toContain('## TECHNICAL METRICS');
+            expect(result.text).toContain('## NEXT STEPS');
+
+            // Check for bullet points
+            expect(result.text).toMatch(/- Fixed JWT/);
+            expect(result.text).toMatch(/- Added new React/);
+
+            // Check for specific metrics
+            expect(result.text).toContain('20% of users');
+            expect(result.text).toContain('15%');
+
+            // Verify correct calls were made
+            expect(mockCommitRepository.find).toHaveBeenCalled();
+            expect(mockMcpService.generateResponse).toHaveBeenCalled();
+            expect(mockDailySummaryRepository.save).toHaveBeenCalled();
         });
     });
 }); 

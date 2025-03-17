@@ -252,17 +252,37 @@ export class GitService {
         Diff:
         ${commit.diff}
         
-        IMPORTANT GUIDELINES:
-        1. Write a CONCISE, HIGH-LEVEL summary (2-3 sentences maximum)
-        2. Focus on WHAT was changed (new features, fixes, refactoring)
-        3. Mention key components or areas affected
-        4. Use plain, direct language
-        5. DO NOT list every file changed
-        6. DO NOT use marketing language or subjective assessments
-        7. DO NOT speculate about intentions or impacts
+        IMPORTANT FORMATTING GUIDELINES:
+        Create a well-structured summary with the following sections:
         
-        Example of good summary:
-        "Added authentication middleware to API endpoints. Implemented password reset functionality with email notifications. Fixed user profile data validation."
+        SECTION 1: "WHAT CHANGED"
+        - A single concise sentence overview of the commit
+        - Then 2-3 bullet points with specific technical details about what was changed
+        - Be precise about components, files, or systems affected
+        
+        SECTION 2: "TECHNICAL IMPACT" (When relevant)
+        - 1-2 bullet points describing technical impact
+        - Include metrics if possible (e.g., "Reduced page load time by ~20%")
+        - Note performance, security, or architectural implications
+        
+        Follow these style rules:
+        1. Use Markdown formatting: sections with ### headings, bullet points with -
+        2. Be technical and specific, focusing on what and how (not why)
+        3. Code elements should be in backticks (e.g., \`function()\`)
+        4. Keep the entire summary concise (max 150 words)
+        
+        Example:
+        
+        ### WHAT CHANGED
+        Enhanced JWT authentication security in the auth middleware.
+        
+        - Added explicit algorithm verification in \`jwt.verify()\` calls to prevent signature bypass
+        - Implemented support for both HS256 and RS256 signature algorithms
+        - Updated error handling for invalid tokens with more specific error messages
+        
+        ### TECHNICAL IMPACT
+        - Mitigated potential security vulnerability that could allow forged tokens
+        - Improved error logging for authentication failures, aiding in troubleshooting
         `;
 
         try {
@@ -387,26 +407,45 @@ export class GitService {
         - Estimated lines changed: ${totalLinesChanged}
         - Complexity score: ${complexityScore} (higher means more complex changes)
         
-        IMPORTANT GUIDELINES:
-        1. Write a CONCISE summary (3-5 sentences) of what was accomplished
-        2. Focus on key features, fixes, or improvements
-        3. Group related changes together
-        4. Use plain, direct language
+        IMPORTANT FORMATTING GUIDELINES:
+        Create a well-structured report with the following sections:
         
-        THEN, provide a brief assessment of developer productivity:
-        1. Evaluate the day's output (exceptional, good, average, or below average)
-        2. Consider quantity (number of commits, lines changed) AND quality/complexity
-        3. Be fair but honest in your assessment
-        4. Keep this section to 1-2 sentences
+        SECTION 1: "SUMMARY OF CHANGES"
+        - Start with a concise 2-3 sentence overview of the day's work
+        - Then list key changes as bullet points, grouped by type (features, fixes, refactoring)
+        - Use technical, specific descriptions for each bullet point
         
-        Format your response with two paragraphs:
-        1. First paragraph: Summary of changes
-        2. Second paragraph: Assessment of productivity
+        SECTION 2: "TECHNICAL METRICS"
+        - Present specific metrics about the work completed
+        - Mention affected components, systems, or areas of the codebase
+        - Note any technical debt or items needing future attention
+        - Include concrete numbers when possible
+        
+        SECTION 3: "NEXT STEPS" (Optional, only if clearly implied by the commits)
+        - Briefly suggest logical next steps or areas to focus on
+        - Base this strictly on the commits analyzed, not speculation
+        
+        Follow these style rules:
+        1. Use Markdown formatting: sections with ## headings, bullet points with -
+        2. Be objective and technical, not subjective or promotional
+        3. Write in a clear, direct style focused on technical details
+        4. For bullet points, aim for 4-6 items total across all sections
         
         Example:
-        "Implemented user authentication system with login and registration. Fixed critical bug in payment processing that was causing transaction failures. Added error handling to improve system stability.
         
-        This was a highly productive day with substantial feature additions and critical bug fixes. The changes demonstrate strong technical execution across both frontend and backend systems."
+        ## SUMMARY OF CHANGES
+        Authentication system implementation and payment processing improvements were the main focus of today's development work.
+        
+        - Added OAuth2 authentication middleware to API endpoints
+        - Implemented password reset flow with email notifications
+        - Fixed critical payment processing transaction failures
+        - Added error handling to improve system stability
+        
+        ## TECHNICAL METRICS
+        Today's work included 1 major feature (authentication) and 2 bug fixes across 7 files. The payment processing fix resolved an issue affecting 15% of transactions. The error handling improvements will reduce unhandled exceptions by approximately 30%.
+        
+        ## NEXT STEPS
+        The validation layer still needs refactoring to address technical debt and improve input sanitization.
         `;
 
         try {
