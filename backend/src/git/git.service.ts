@@ -253,20 +253,35 @@ export class GitService {
         ${commit.diff}
         
         IMPORTANT FORMATTING GUIDELINES:
-        Create a well-structured summary with the following sections:
+        Create a well-structured summary with the following sections using HTML/Markdown mixed formatting:
         
         SECTION 1: "WHAT CHANGED"
+        - Use ### for the section heading (will be styled as a primary color)
         - A single concise sentence overview of the commit
         - Then 2-3 bullet points with specific technical details about what was changed
         - Be precise about components, files, or systems affected
+        - For important points, use **bold** formatting
         
         SECTION 2: "TECHNICAL IMPACT" (When relevant)
+        - Use ### for the section heading (will be styled as a primary color) 
         - 1-2 bullet points describing technical impact
         - Include metrics if possible (e.g., "Reduced page load time by ~20%")
         - Note performance, security, or architectural implications
+        - Wrap numbers/metrics in inline code blocks using backticks for emphasis
+        
+        Advanced Formatting:
+        1. For feature additions, prefix with 🆕
+        2. For bug fixes, prefix with 🐛
+        3. For performance improvements, prefix with ⚡
+        4. For security improvements, prefix with 🔒
+        5. For refactorings, prefix with ♻️
+        6. For documentation, prefix with 📝
+        7. For critical items, wrap in <span style="color: #e11d48">critical text</span>
+        8. For positive impacts, wrap in <span style="color: #22c55e">positive text</span>
+        9. For file paths or code elements, use \`code\` backticks
         
         Follow these style rules:
-        1. Use Markdown formatting: sections with ### headings, bullet points with -
+        1. Use Markdown formatting with HTML for color highlights
         2. Be technical and specific, focusing on what and how (not why)
         3. Code elements should be in backticks (e.g., \`function()\`)
         4. Keep the entire summary concise (max 150 words)
@@ -276,13 +291,13 @@ export class GitService {
         ### WHAT CHANGED
         Enhanced JWT authentication security in the auth middleware.
         
-        - Added explicit algorithm verification in \`jwt.verify()\` calls to prevent signature bypass
-        - Implemented support for both HS256 and RS256 signature algorithms
-        - Updated error handling for invalid tokens with more specific error messages
+        - 🔒 Added explicit algorithm verification in \`jwt.verify()\` calls to prevent <span style="color: #e11d48">signature bypass attacks</span>
+        - 🔒 Implemented support for both \`HS256\` and \`RS256\` signature algorithms
+        - 🐛 Updated error handling for invalid tokens with more specific error messages
         
         ### TECHNICAL IMPACT
-        - Mitigated potential security vulnerability that could allow forged tokens
-        - Improved error logging for authentication failures, aiding in troubleshooting
+        - Mitigated <span style="color: #e11d48">potential security vulnerability</span> that could allow forged tokens
+        - Improved error logging for authentication failures, aiding in <span style="color: #22c55e">faster troubleshooting</span>
         `;
 
         try {
@@ -408,41 +423,55 @@ export class GitService {
         - Complexity score: ${complexityScore} (higher means more complex changes)
         
         IMPORTANT FORMATTING GUIDELINES:
-        Create a well-structured report with the following sections:
+        Create a well-structured report with the following sections using HTML/Markdown mixed formatting:
         
         SECTION 1: "SUMMARY OF CHANGES"
+        - Use ## for the section heading (will be styled as a primary color)
         - Start with a concise 2-3 sentence overview of the day's work
         - Then list key changes as bullet points, grouped by type (features, fixes, refactoring)
         - Use technical, specific descriptions for each bullet point
+        - For important points, use **bold** formatting
         
         SECTION 2: "TECHNICAL METRICS"
+        - Use ## for the section heading (will be styled as a primary color)
         - Present specific metrics about the work completed
         - Mention affected components, systems, or areas of the codebase
         - Note any technical debt or items needing future attention
         - Include concrete numbers when possible
+        - Wrap numbers/metrics in inline code blocks using backticks for emphasis
         
         SECTION 3: "NEXT STEPS" (Optional, only if clearly implied by the commits)
+        - Use ## for the section heading (will be styled as a primary color)
         - Briefly suggest logical next steps or areas to focus on
         - Base this strictly on the commits analyzed, not speculation
         
-        Follow these style rules:
-        1. Use Markdown formatting: sections with ## headings, bullet points with -
-        2. Be objective and technical, not subjective or promotional
-        3. Write in a clear, direct style focused on technical details
-        4. For bullet points, aim for 4-6 items total across all sections
+        Advanced Formatting:
+        1. For feature additions, prefix with 🆕
+        2. For bug fixes, prefix with 🐛
+        3. For performance improvements, prefix with ⚡
+        4. For security improvements, prefix with 🔒
+        5. For refactorings, prefix with ♻️
+        6. For documentation, prefix with 📝
+        7. For critical items, wrap in <span style="color: #e11d48">critical text</span>
+        8. For positive impacts, wrap in <span style="color: #22c55e">positive text</span>
+        9. For file paths or code elements, use \`code\` backticks
+        10. For subsection titles, use ### (smaller headings)
         
-        Example:
+        Example Output:
         
         ## SUMMARY OF CHANGES
         Authentication system implementation and payment processing improvements were the main focus of today's development work.
         
-        - Added OAuth2 authentication middleware to API endpoints
-        - Implemented password reset flow with email notifications
-        - Fixed critical payment processing transaction failures
-        - Added error handling to improve system stability
+        ### Features
+        - 🆕 Added OAuth2 authentication middleware to \`api/auth/middleware.js\`
+        - 🆕 Implemented **password reset flow** with email notifications
+        
+        ### Fixes
+        - 🐛 Fixed <span style="color: #e11d48">critical payment processing transaction failures</span>
+        - 🔒 Enhanced JWT token validation with proper algorithm verification
         
         ## TECHNICAL METRICS
-        Today's work included 1 major feature (authentication) and 2 bug fixes across 7 files. The payment processing fix resolved an issue affecting 15% of transactions. The error handling improvements will reduce unhandled exceptions by approximately 30%.
+        Today's work included \`1\` major feature (authentication) and \`2\` bug fixes across \`7\` files. The payment processing fix resolved an issue affecting <span style="color: #22c55e">15% of transactions</span>. The error handling improvements will reduce unhandled exceptions by approximately \`30%\`.
         
         ## NEXT STEPS
         The validation layer still needs refactoring to address technical debt and improve input sanitization.

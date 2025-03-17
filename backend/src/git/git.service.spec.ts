@@ -185,13 +185,13 @@ describe('GitService', () => {
                 content: `### WHAT CHANGED
 Enhanced JWT authentication security in the auth middleware.
 
-- Added explicit algorithm verification in \`jwt.verify()\` calls to prevent signature bypass
-- Implemented support for both HS256 and RS256 signature algorithms
-- Updated error handling for invalid tokens with more specific error messages
+- 🔒 Added explicit algorithm verification in \`jwt.verify()\` calls to prevent <span style="color: #e11d48">signature bypass attacks</span>
+- 🔒 Implemented support for both \`HS256\` and \`RS256\` signature algorithms
+- 🐛 Updated error handling for invalid tokens with more specific error messages
 
 ### TECHNICAL IMPACT
-- Mitigated potential security vulnerability that could allow forged tokens
-- Improved error logging for authentication failures, aiding in troubleshooting`
+- Mitigated <span style="color: #e11d48">potential security vulnerability</span> that could allow forged tokens
+- Improved error logging for authentication failures, aiding in <span style="color: #22c55e">faster troubleshooting</span>`
             };
             mockMcpService.generateResponse.mockResolvedValue(mockSummaryResponse);
 
@@ -209,10 +209,13 @@ Enhanced JWT authentication security in the auth middleware.
             expect(result.generatedSummary).toContain('### WHAT CHANGED');
             expect(result.generatedSummary).toContain('### TECHNICAL IMPACT');
 
-            // Check for bullet points
-            expect(result.generatedSummary).toMatch(/- Added explicit/);
-            expect(result.generatedSummary).toMatch(/- Implemented support/);
-            expect(result.generatedSummary).toMatch(/- Mitigated potential/);
+            // Check for bullet points and emojis
+            expect(result.generatedSummary).toMatch(/- 🔒 Added explicit/);
+            expect(result.generatedSummary).toMatch(/- 🐛 Updated error/);
+
+            // Check for HTML styling
+            expect(result.generatedSummary).toContain('<span style="color: #e11d48">');
+            expect(result.generatedSummary).toContain('<span style="color: #22c55e">');
 
             // Check for code formatting
             expect(result.generatedSummary).toContain('`jwt.verify()`');
@@ -267,12 +270,16 @@ Enhanced JWT authentication security in the auth middleware.
                 content: `## SUMMARY OF CHANGES
 Authentication system improvements and UI enhancements were the focus of today's development work.
 
-- Fixed JWT authentication bug in auth middleware
-- Added new React component for improved user dashboard experience
-- Updated error handling for authentication failures
+### Features
+- 🆕 Added OAuth2 authentication middleware to \`api/auth/middleware.js\`
+- 🆕 Implemented **password reset flow** with email notifications
+
+### Fixes
+- 🐛 Fixed <span style="color: #e11d48">critical payment processing transaction failures</span>
+- 🔒 Enhanced JWT token validation with proper algorithm verification
 
 ## TECHNICAL METRICS
-Today's work included 1 bug fix and 1 UI enhancement across 5 files. The authentication fix resolved an issue affecting user login for approximately 20% of users. The UI component improves dashboard load time by 15%.
+Today's work included \`1\` major feature (authentication) and \`2\` bug fixes across \`7\` files. The payment processing fix resolved an issue affecting <span style="color: #22c55e">15% of transactions</span>. The error handling improvements will reduce unhandled exceptions by approximately \`30%\`.
 
 ## NEXT STEPS
 Browser compatibility testing is still needed for the new UI component, especially for older versions of Safari.`
@@ -298,13 +305,20 @@ Browser compatibility testing is still needed for the new UI component, especial
             expect(result.text).toContain('## TECHNICAL METRICS');
             expect(result.text).toContain('## NEXT STEPS');
 
-            // Check for bullet points
-            expect(result.text).toMatch(/- Fixed JWT/);
-            expect(result.text).toMatch(/- Added new React/);
+            // Check for subsection headers
+            expect(result.text).toContain('### Features');
+            expect(result.text).toContain('### Fixes');
 
-            // Check for specific metrics
-            expect(result.text).toContain('20% of users');
-            expect(result.text).toContain('15%');
+            // Check for emojis and bullet points
+            expect(result.text).toMatch(/- 🆕 Added/);
+            expect(result.text).toMatch(/- 🐛 Fixed/);
+
+            // Check for HTML styling
+            expect(result.text).toContain('<span style="color: #e11d48">');
+            expect(result.text).toContain('<span style="color: #22c55e">');
+
+            // Check for code formatting
+            expect(result.text).toContain('`api/auth/middleware.js`');
 
             // Verify correct calls were made
             expect(mockCommitRepository.find).toHaveBeenCalled();
