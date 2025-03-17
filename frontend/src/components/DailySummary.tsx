@@ -50,7 +50,11 @@ export function DailySummary({ date, repoFullName }: DailySummaryProps) {
         if (!repoFullName) return;
 
         generateDailySummary(
-            { date: formattedDate, repoFullName },
+            {
+                date: formattedDate,
+                repoFullName,
+                force: summary !== null // Force regeneration if summary already exists
+            },
             {
                 onSuccess: (data) => {
                     setSummary(data);

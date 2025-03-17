@@ -67,19 +67,21 @@ export class GitController {
     async generateDailySummary(
         @Body('date') date: string,
         @Body('repoFullName') repoFullName: string,
+        @Body('force') force?: boolean,
     ): Promise<{ text: string }> {
         const schema = z.object({
             date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format'),
             repoFullName: z.string().regex(/^[^\/]+\/[^\/]+$/, 'Repository must be in format "owner/repo"'),
+            force: z.boolean().optional(),
         });
 
         try {
-            schema.parse({ date, repoFullName });
+            schema.parse({ date, repoFullName, force });
         } catch (error) {
             throw new BadRequestException('Invalid parameters. Date must be in YYYY-MM-DD format and repoFullName must be in "owner/repo" format.');
         }
 
-        return this.gitService.generateDailySummary(date, repoFullName);
+        return this.gitService.generateDailySummary(date, repoFullName, force || false);
     }
 
     @Get('daily-summary')

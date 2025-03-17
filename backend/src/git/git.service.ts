@@ -319,7 +319,7 @@ export class GitService {
         }
     }
 
-    async generateDailySummary(date: string, repoFullName: string): Promise<{ text: string }> {
+    async generateDailySummary(date: string, repoFullName: string, force: boolean = false): Promise<{ text: string }> {
         // Parse the date string to a Date object
         const targetDate = new Date(date);
 
@@ -338,8 +338,8 @@ export class GitService {
             }
         });
 
-        // If we have an existing summary, return it
-        if (existingSummary) {
+        // If we have an existing summary and force is false, return it
+        if (existingSummary && !force) {
             return { text: existingSummary.summary };
         }
 
@@ -475,12 +475,20 @@ export class GitService {
             }
 
             // Store the summary in the database
-            const newSummary = new DailySummary();
-            newSummary.date = targetDate;
-            newSummary.repository = repoFullName;
-            newSummary.summary = summaryText;
-            newSummary.createdAt = new Date();
-            await this.dailySummaryRepository.save(newSummary);
+            if (existingSummary && force) {
+                // Update existing summary
+                existingSummary.summary = summaryText;
+                existingSummary.createdAt = new Date(); // Update timestamp
+                await this.dailySummaryRepository.save(existingSummary);
+            } else {
+                // Create new summary
+                const newSummary = new DailySummary();
+                newSummary.date = targetDate;
+                newSummary.repository = repoFullName;
+                newSummary.summary = summaryText;
+                newSummary.createdAt = new Date();
+                await this.dailySummaryRepository.save(newSummary);
+            }
 
             return { text: summaryText };
         } catch (error) {

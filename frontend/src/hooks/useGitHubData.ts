@@ -162,7 +162,15 @@ export function useGenerateDailySummary() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: async ({ date, repoFullName }: { date: string, repoFullName: string }) => {
+        mutationFn: async ({
+            date,
+            repoFullName,
+            force = false
+        }: {
+            date: string,
+            repoFullName: string,
+            force?: boolean
+        }) => {
             if (!accessToken) {
                 throw new Error('Authentication required');
             }
@@ -173,7 +181,7 @@ export function useGenerateDailySummary() {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${accessToken}`
                 },
-                body: JSON.stringify({ date, repoFullName })
+                body: JSON.stringify({ date, repoFullName, force })
             });
 
             if (!response.ok) {
