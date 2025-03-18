@@ -11,10 +11,19 @@ import {
     DialogFooter,
     DialogClose
 } from './ui/dialog';
+import {
+    Drawer,
+    DrawerClose,
+    DrawerContent,
+    DrawerFooter,
+    DrawerHeader,
+    DrawerTitle,
+} from './ui/drawer';
 import { Button } from './ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { formatDistanceToNow } from 'date-fns';
 import { ScrollArea } from './ui/scroll-area';
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 interface DailyCommitsDialogProps {
     isOpen: boolean;
@@ -33,6 +42,89 @@ export function DailyCommitsDialog({
     commits,
     onCommitClick
 }: DailyCommitsDialogProps) {
+    const [showSummary, setShowSummary] = useState(false);
+    const isDesktop = useMediaQuery("(min-width: 768px)");
+
+    // Content for both commits list and daily summary
+    const CommitsList = (
+        <Card className="flex flex-col flex-1">
+            <CardHeader className="py-3">
+                <CardTitle>Commits</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0 flex-1 overflow-hidden">
+                <ScrollArea className="h-[350px] w-full">
+                    <div className="space-y-2 p-4 w-full max-w-full">
+                        {commits.length > 0 ? (
+                            commits.map((commit) => (
+                                <div
+                                    key={commit.hash}
+                                    className="p-3 border rounded-md hover:bg-gray-50 cursor-pointer w-full max-w-full overflow-hidden"
+                                    onClick={() => onCommitClick(commit)}
+                                >
+                                    <div className="font-medium truncate w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap">
+                                        {commit.message}
+                                    </div>
+                                    <div className="text-sm text-gray-500 flex justify-between mt-1 w-full">
+                                        <span className="truncate max-w-[40%] overflow-hidden text-ellipsis">{commit.author}</span>
+                                        <span className="ml-2 text-right whitespace-nowrap shrink-0">{commit.date instanceof Date
+                                            ? formatDistanceToNow(commit.date, { addSuffix: true })
+                                            : formatDistanceToNow(new Date(commit.date), { addSuffix: true })}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="text-center py-8 text-gray-500">
+                                No commits found for this day
+                            </div>
+                        )}
+                    </div>
+                </ScrollArea>
+            </CardContent>
+        </Card>
+    );
+
+    // Mobile version using Drawer
+    if (!isDesktop) {
+        return (
+            <>
+                <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
+                    <DrawerContent>
+                        <DrawerHeader>
+                            <DrawerTitle>
+                                {format(date, 'MMMM d, yyyy')}
+                                {repoFullName && ` - ${repoFullName}`}
+                            </DrawerTitle>
+                            <p className="text-sm text-muted-foreground">
+                                {commits.length} commit{commits.length !== 1 ? 's' : ''} on this day
+                            </p>
+                        </DrawerHeader>
+                        <div className="px-4 mb-2">
+                            {!showSummary ? CommitsList :
+                                <DailySummary
+                                    date={date}
+                                    repoFullName={repoFullName}
+                                />
+                            }
+                        </div>
+                        <DrawerFooter className="flex flex-row justify-between">
+                            <Button
+                                variant="outline"
+                                onClick={() => setShowSummary(!showSummary)}
+                            >
+                                {showSummary ? "View Commits" : "View Summary"}
+                            </Button>
+                            <DrawerClose asChild>
+                                <Button variant="outline">Close</Button>
+                            </DrawerClose>
+                        </DrawerFooter>
+                    </DrawerContent>
+                </Drawer>
+            </>
+        );
+    }
+
+    // Desktop version using Dialog
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className="sm:max-w-[800px] md:max-w-[900px] max-h-[90vh] flex flex-col p-4 gap-4">
@@ -57,41 +149,7 @@ export function DailyCommitsDialog({
 
                     {/* Commits List Section */}
                     <div className="md:w-1/2 flex flex-col">
-                        <Card className="flex flex-col flex-1">
-                            <CardHeader className="py-3">
-                                <CardTitle>Commits</CardTitle>
-                            </CardHeader>
-                            <CardContent className="p-0 flex-1 overflow-hidden">
-                                <ScrollArea className="h-[350px] w-full">
-                                    <div className="space-y-2 p-4 w-full max-w-full">
-                                        {commits.length > 0 ? (
-                                            commits.map((commit) => (
-                                                <div
-                                                    key={commit.hash}
-                                                    className="p-3 border rounded-md hover:bg-gray-50 cursor-pointer w-full max-w-full overflow-hidden"
-                                                    onClick={() => onCommitClick(commit)}
-                                                >
-                                                    <div className="font-medium truncate w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap">
-                                                        {commit.message}
-                                                    </div>
-                                                    <div className="text-sm text-gray-500 flex justify-between mt-1 w-full">
-                                                        <span className="truncate max-w-[40%] overflow-hidden text-ellipsis">{commit.author}</span>
-                                                        <span className="ml-2 text-right whitespace-nowrap shrink-0">{commit.date instanceof Date
-                                                            ? formatDistanceToNow(commit.date, { addSuffix: true })
-                                                            : formatDistanceToNow(new Date(commit.date), { addSuffix: true })}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <div className="text-center py-8 text-gray-500">
-                                                No commits found for this day
-                                            </div>
-                                        )}
-                                    </div>
-                                </ScrollArea>
-                            </CardContent>
-                        </Card>
+                        {CommitsList}
                     </div>
                 </div>
 

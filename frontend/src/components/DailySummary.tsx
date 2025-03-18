@@ -4,10 +4,8 @@ import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/card';
 import { Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
-import ReactMarkdown from 'react-markdown';
-import rehypeRaw from 'rehype-raw';
-import remarkGfm from 'remark-gfm';
 import { ScrollArea } from './ui/scroll-area';
+import { MarkdownRenderer } from './ui/markdown-renderer';
 
 interface DailySummaryProps {
     date: Date;
@@ -96,38 +94,7 @@ export function DailySummary({ date, repoFullName }: DailySummaryProps) {
                                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                             </div>
                         ) : summary ? (
-                            <div className="prose prose-sm dark:prose-invert max-w-none overflow-hidden">
-                                <ReactMarkdown
-                                    rehypePlugins={[rehypeRaw]}
-                                    remarkPlugins={[remarkGfm]}
-                                    components={{
-                                        // Custom components for styling
-                                        h2: ({ node, ...props }) => (
-                                            <h2
-                                                className="text-xl font-bold mb-2 pb-1 border-b text-primary"
-                                                {...props}
-                                            />
-                                        ),
-                                        h3: ({ node, ...props }) => (
-                                            <h3
-                                                className="text-lg font-semibold mb-2 text-primary"
-                                                {...props}
-                                            />
-                                        ),
-                                        ul: ({ node, ...props }) => (
-                                            <ul className="my-2 pl-6 list-disc" {...props} />
-                                        ),
-                                        li: ({ node, ...props }) => (
-                                            <li className="mb-1" {...props} />
-                                        ),
-                                        code: ({ node, ...props }) => (
-                                            <code className="px-1 py-0.5 rounded bg-muted text-muted-foreground" {...props} />
-                                        ),
-                                    }}
-                                >
-                                    {summary}
-                                </ReactMarkdown>
-                            </div>
+                            <MarkdownRenderer content={summary} />
                         ) : isError ? (
                             <div className="text-destructive">
                                 <p>Error: {error?.message}</p>

@@ -22,8 +22,9 @@ import {
     DialogClose
 } from './ui/dialog';
 import { CommitDetails } from './CommitDetails';
-import { useMediaQuery } from '../hooks/use-media-query';
 import { Loader2 } from 'lucide-react';
+import { MarkdownRenderer } from './ui/markdown-renderer';
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 interface CommitDetailsDrawerProps {
     isOpen: boolean;
@@ -79,7 +80,7 @@ export function CommitDetailsDrawer({
                             <div>
                                 <h3 className="font-medium">AI Summary</h3>
                                 <div className="bg-muted p-3 rounded-md">
-                                    <p className="text-sm whitespace-pre-wrap">{commit.generatedSummary}</p>
+                                    <MarkdownRenderer content={commit.generatedSummary} />
                                 </div>
                             </div>
                         )}
@@ -142,7 +143,7 @@ export function CommitDetailsDrawer({
                         <div>
                             <h3 className="font-medium">AI Summary</h3>
                             <div className="bg-muted p-3 rounded-md">
-                                <p className="text-sm whitespace-pre-wrap">{commit.generatedSummary}</p>
+                                <MarkdownRenderer content={commit.generatedSummary} />
                             </div>
                         </div>
                     )}
