@@ -8,6 +8,9 @@ import { Button } from './ui/button';
 import { Skeleton } from './ui/skeleton';
 import { cn } from '../../lib/utils';
 import { Commit } from '../types/commit';
+import { MobileCalendar, MobileCalendarEvent } from './ui/mobile-calendar';
+import { isEqual, parseISO, format } from 'date-fns';
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 interface CommitCalendarProps {
     selectedRepo: string | null;
@@ -28,6 +31,37 @@ export function CommitCalendar({
     onCommitClick,
     onDateClick
 }: CommitCalendarProps) {
+    const isMobile = !useMediaQuery("(min-width: 768px)");
+
+    // Transform events for mobile calendar
+    const mobileEvents: MobileCalendarEvent[] = events.map(event => ({
+        date: typeof event.date === 'string' ? new Date(event.date) : event.date,
+        count: 1
+    }));
+
+    // Aggregate events by date for mobile view (combine events on the same day)
+    const aggregatedMobileEvents = mobileEvents.reduce((acc: MobileCalendarEvent[], current) => {
+        const existingEventIndex = acc.findIndex(e =>
+            format(typeof e.date === 'string' ? new Date(e.date) : e.date, 'yyyy-MM-dd') ===
+            format(typeof current.date === 'string' ? new Date(current.date) : current.date, 'yyyy-MM-dd')
+        );
+
+        if (existingEventIndex >= 0) {
+            acc[existingEventIndex].count += current.count;
+        } else {
+            acc.push(current);
+        }
+
+        return acc;
+    }, []);
+
+    // Handle mobile date click
+    const handleMobileDateClick = (date: Date) => {
+        if (onDateClick) {
+            onDateClick({ date });
+        }
+    };
+
     return (
         <Card className="lg:col-span-2">
             <CardHeader>
@@ -40,29 +74,31 @@ export function CommitCalendar({
                                 : 'Select a repository to view commits'}
                         </CardDescription>
                     </div>
-                    <div className="flex space-x-2">
-                        <Button
-                            size="sm"
-                            variant={calendarView === 'dayGridMonth' ? 'default' : 'outline'}
-                            onClick={() => setCalendarView('dayGridMonth')}
-                        >
-                            Month
-                        </Button>
-                        <Button
-                            size="sm"
-                            variant={calendarView === 'dayGridWeek' ? 'default' : 'outline'}
-                            onClick={() => setCalendarView('dayGridWeek')}
-                        >
-                            Week
-                        </Button>
-                        <Button
-                            size="sm"
-                            variant={calendarView === 'dayGridDay' ? 'default' : 'outline'}
-                            onClick={() => setCalendarView('dayGridDay')}
-                        >
-                            Day
-                        </Button>
-                    </div>
+                    {!isMobile && (
+                        <div className="flex space-x-2">
+                            <Button
+                                size="sm"
+                                variant={calendarView === 'dayGridMonth' ? 'default' : 'outline'}
+                                onClick={() => setCalendarView('dayGridMonth')}
+                            >
+                                Month
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant={calendarView === 'dayGridWeek' ? 'default' : 'outline'}
+                                onClick={() => setCalendarView('dayGridWeek')}
+                            >
+                                Week
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant={calendarView === 'dayGridDay' ? 'default' : 'outline'}
+                                onClick={() => setCalendarView('dayGridDay')}
+                            >
+                                Day
+                            </Button>
+                        </div>
+                    )}
                 </div>
             </CardHeader>
             <CardContent>
@@ -75,7 +111,14 @@ export function CommitCalendar({
                             <Skeleton className="h-4 w-1/4" />
                         </div>
                     </div>
+                ) : isMobile ? (
+                    // Mobile view with our custom calendar that shows commit counts
+                    <MobileCalendar
+                        events={aggregatedMobileEvents}
+                        onDateClick={handleMobileDateClick}
+                    />
                 ) : (
+                    // Desktop view with FullCalendar
                     <div className={cn(
                         "rounded-md border overflow-hidden",
                         "fc-theme-standard", // Add FullCalendar theme class

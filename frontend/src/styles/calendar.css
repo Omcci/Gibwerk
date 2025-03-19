@@ -79,3 +79,55 @@ Custom calendar styling .custom-calendar .fc-daygrid-day.fc-day-today {
         font-size: 1rem !important;
     }
 }
+
+/* Mobile calendar styles */
+.mobile-calendar-day {
+    aspect-ratio: 1/1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.mobile-calendar-day:hover {
+    background-color: rgba(59, 130, 246, 0.05);
+}
+
+.mobile-calendar-day.today {
+    font-weight: bold;
+    background-color: rgba(59, 130, 246, 0.1);
+}
+
+.mobile-calendar-badge {
+    font-size: 0.6rem;
+    padding: 1px 4px;
+    border-radius: 9999px;
+    min-width: 16px;
+    text-align: center;
+    font-weight: 500;
+}
+
+.mobile-calendar-badge.high {
+    background-color: #3b82f6;
+    color: white;
+}
+
+.mobile-calendar-badge.medium {
+    background-color: #60a5fa;
+    color: white;
+}
+
+.mobile-calendar-badge.low {
+    background-color: #93c5fd;
+    color: white;
+}
+
+/* Additional responsive adjustments */
+@media (max-width: 640px) {
+    .mobile-calendar-day {
+        font-size: 0.75rem;
+    }
+}
