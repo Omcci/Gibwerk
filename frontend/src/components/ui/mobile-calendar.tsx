@@ -36,17 +36,30 @@ export function MobileCalendar({ events, onDateClick }: MobileCalendarProps) {
 
     // Get commit count for a specific date
     const getCommitCount = (date: Date): number => {
-        return events.filter(event => {
+        const formattedSearchDate = format(date, 'yyyy-MM-dd');
+        const matchingEvent = events.find(event => {
             const eventDate = typeof event.date === 'string' ? new Date(event.date) : event.date;
-            return format(eventDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
-        }).length;
+            return format(eventDate, 'yyyy-MM-dd') === formattedSearchDate;
+        });
+
+        if (matchingEvent) {
+            return matchingEvent.count;
+        }
+        return 0;
     };
 
-    // Get commit count color class
+    // Get commit count color class based on intensity
     const getCommitCountClass = (count: number): string => {
-        if (count > 5) return "bg-primary text-primary-foreground";
-        if (count > 2) return "bg-secondary text-secondary-foreground";
-        return "bg-accent text-accent-foreground";
+        if (count > 10) return "bg-primary text-primary-foreground";
+        if (count > 5) return "bg-secondary text-secondary-foreground";
+        return count > 0 ? "bg-accent text-accent-foreground" : "";
+    };
+
+    // Get badge size based on count
+    const getBadgeSize = (count: number): string => {
+        if (count > 10) return "min-w-6 min-h-6";
+        if (count > 5) return "min-w-5 min-h-5";
+        return "min-w-4 min-h-4";
     };
 
     // Handle day click with ripple effect
@@ -148,7 +161,8 @@ export function MobileCalendar({ events, onDateClick }: MobileCalendarProps) {
                                     <Badge
                                         variant="secondary"
                                         className={cn(
-                                            "px-1 py-0 text-[10px] min-w-5 min-h-5 flex items-center justify-center",
+                                            "px-1 py-0 text-[10px] flex items-center justify-center",
+                                            getBadgeSize(commitCount),
                                             getCommitCountClass(commitCount)
                                         )}
                                     >

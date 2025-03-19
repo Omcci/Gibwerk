@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -10,7 +11,7 @@ import { cn } from '../../lib/utils';
 import { Commit } from '../types/commit';
 import { MobileCalendar, MobileCalendarEvent } from './ui/mobile-calendar';
 import { isEqual, parseISO, format } from 'date-fns';
-import { useMediaQuery } from '@/hooks/use-media-query';
+import { useMediaQuery } from '../hooks/use-media-query';
 
 interface CommitCalendarProps {
     selectedRepo: string | null;
@@ -33,27 +34,35 @@ export function CommitCalendar({
 }: CommitCalendarProps) {
     const isMobile = !useMediaQuery("(min-width: 768px)");
 
-    // Transform events for mobile calendar
-    const mobileEvents: MobileCalendarEvent[] = events.map(event => ({
-        date: typeof event.date === 'string' ? new Date(event.date) : event.date,
-        count: 1
-    }));
+    // Process events for mobile calendar - properly count events per day
+    const mobileEvents = useMemo(() => {
 
-    // Aggregate events by date for mobile view (combine events on the same day)
-    const aggregatedMobileEvents = mobileEvents.reduce((acc: MobileCalendarEvent[], current) => {
-        const existingEventIndex = acc.findIndex(e =>
-            format(typeof e.date === 'string' ? new Date(e.date) : e.date, 'yyyy-MM-dd') ===
-            format(typeof current.date === 'string' ? new Date(current.date) : current.date, 'yyyy-MM-dd')
+        // Create a map to count commits per day
+        const dateCountMap = new Map<string, number>();
+
+        // Count commits for each date
+        events.forEach(event => {
+            const eventDate = event.date || (event.start ? new Date(event.start) : null);
+            if (!eventDate) return;
+
+            const dateKey = format(
+                typeof eventDate === 'string' ? new Date(eventDate) : eventDate,
+                'yyyy-MM-dd'
+            );
+
+            dateCountMap.set(dateKey, (dateCountMap.get(dateKey) || 0) + 1);
+        });
+
+        // Convert map to array of MobileCalendarEvent objects
+        const mobileEvents: MobileCalendarEvent[] = Array.from(dateCountMap.entries()).map(
+            ([dateStr, count]) => ({
+                date: new Date(dateStr),
+                count
+            })
         );
 
-        if (existingEventIndex >= 0) {
-            acc[existingEventIndex].count += current.count;
-        } else {
-            acc.push(current);
-        }
-
-        return acc;
-    }, []);
+        return mobileEvents;
+    }, [events]);
 
     // Handle mobile date click
     const handleMobileDateClick = (date: Date) => {
@@ -114,7 +123,7 @@ export function CommitCalendar({
                 ) : isMobile ? (
                     // Mobile view with our custom calendar that shows commit counts
                     <MobileCalendar
-                        events={aggregatedMobileEvents}
+                        events={mobileEvents}
                         onDateClick={handleMobileDateClick}
                     />
                 ) : (

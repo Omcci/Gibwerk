@@ -23,7 +23,7 @@ import { Button } from './ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { formatDistanceToNow } from 'date-fns';
 import { ScrollArea } from './ui/scroll-area';
-import { useMediaQuery } from '@/hooks/use-media-query';
+import { useMediaQuery } from '../hooks/use-media-query';
 
 interface DailyCommitsDialogProps {
     isOpen: boolean;
@@ -99,15 +99,17 @@ export function DailyCommitsDialog({
                                 {commits.length} commit{commits.length !== 1 ? 's' : ''} on this day
                             </p>
                         </DrawerHeader>
-                        <div className="px-4 mb-2">
-                            {!showSummary ? CommitsList :
-                                <DailySummary
-                                    date={date}
-                                    repoFullName={repoFullName}
-                                />
-                            }
-                        </div>
-                        <DrawerFooter className="flex flex-row justify-between">
+                        <ScrollArea className="flex-1 px-4 overflow-y-auto max-h-[60vh]">
+                            <div className="pb-4">
+                                {!showSummary ? CommitsList :
+                                    <DailySummary
+                                        date={date}
+                                        repoFullName={repoFullName}
+                                    />
+                                }
+                            </div>
+                        </ScrollArea>
+                        <DrawerFooter className="flex flex-row justify-between mt-2 border-t pt-4">
                             <Button
                                 variant="outline"
                                 onClick={() => setShowSummary(!showSummary)}
