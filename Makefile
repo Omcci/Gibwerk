@@ -93,16 +93,19 @@ rebuild: down ## Rebuild and restart containers
 	docker compose build --no-cache
 	docker compose up -d
 
-clean: ## Stop containers and remove volumes
-	@echo "${GREEN}Cleaning up Docker resources...${NC}"
-	docker compose down -v
+clean: ## Stop containers and clean up (preserves volumes)
+	@echo "${GREEN}Cleaning up Docker resources (preserving volumes)...${NC}"
+	docker compose down
 	docker system prune -f
+	@echo "${GREEN}✓ Cleanup complete. Data volumes are preserved.${NC}"
 
-purge: ## Remove all Docker resources including images
-	@echo "${GREEN}Removing all Docker resources...${NC}"
+purge: ## Remove ALL Docker resources including volumes (DANGEROUS - WILL DELETE DATA)
+	@echo "${GREEN}⚠️  WARNING: This will DELETE ALL DATA including database contents!${NC}"
+	@echo "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
+	@echo "${GREEN}Removing all Docker resources including volumes...${NC}"
 	docker compose down -v
 	docker system prune -af --volumes
-	@echo "${GREEN}All Docker resources have been removed${NC}"
+	@echo "${GREEN}✓ All Docker resources and volumes have been removed${NC}"
 
 ## Utility commands
 logs: ## Show logs from all containers
@@ -120,10 +123,20 @@ db-migrate: ## Run database migrations
 	@echo "${GREEN}Running database migrations...${NC}"
 	cd backend && npm run typeorm migration:run
 
-db-reset: ## Reset the database
+db-backup: ## Backup the database
+	@echo "${GREEN}Backing up database...${NC}"
+	@mkdir -p database-backups
+	@TIMESTAMP=$$(date +"%Y%m%d_%H%M%S"); \
+	docker compose exec postgres pg_dump -U postgres git_calendar > database-backups/git_calendar_$${TIMESTAMP}.sql
+	@echo "${GREEN}✓ Database backup created in database-backups folder${NC}"
+
+db-reset: ## Reset the database (DANGEROUS - WILL DELETE DATA)
+	@echo "${GREEN}⚠️  WARNING: This will DELETE ALL DATABASE DATA!${NC}"
+	@echo "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
 	@echo "${GREEN}Resetting database...${NC}"
 	docker compose down postgres -v
 	docker compose up postgres -d
+	@echo "${GREEN}✓ Database has been reset${NC}"
 
 ## Production commands
 prod-build: env-setup ## Build for production

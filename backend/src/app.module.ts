@@ -5,6 +5,8 @@ import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { GitModule } from './git/git.module';
 import { McpModule } from './mcp/mcp.module';
+import { NotionModule } from './notion/notion.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -25,7 +27,9 @@ import { McpModule } from './mcp/mcp.module';
       retryDelay: 3000,
     }),
     GitModule,
-    McpModule
+    McpModule,
+    NotionModule,
+    AuthModule
   ],
   controllers: [AppController],
   providers: [AppService],

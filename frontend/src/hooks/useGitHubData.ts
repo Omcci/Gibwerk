@@ -200,4 +200,39 @@ export function useGenerateDailySummary() {
             );
         }
     });
-} 
+}
+
+// Add this new mutation to sync summaries with Notion
+export const useNotionSync = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({
+            date,
+            repoFullName,
+            summary
+        }: {
+            date: string;
+            repoFullName: string;
+            summary: string;
+        }) => {
+            const response = await fetch('/api/notion/sync-daily-summary', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ date, repoFullName, summary }),
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Failed to sync with Notion');
+            }
+
+            return response.json();
+        },
+        onSuccess: () => {
+            // You could invalidate queries here if needed
+        },
+    });
+}; 
